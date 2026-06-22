@@ -1,0 +1,24 @@
+# dependencies
+node_modules/
+
+# expo
+.expo/
+dist/
+web-build/
+*.orig.*
+
+# native
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+
+# env / secrets
+.env
+.env.*
+!.env.example
+
+# misc
+.DS_Store
+npm-debug.*
