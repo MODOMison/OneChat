@@ -22,3 +22,7 @@ web-build/
 # misc
 .DS_Store
 npm-debug.*
+
+# legacy prototype
+onechat-data.json
+*.broken-*
