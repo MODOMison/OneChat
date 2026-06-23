@@ -13,11 +13,13 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Avatar } from '@/components/Avatar';
 import { PlatformBadge } from '@/components/PlatformBadge';
 import { Brand } from '@/constants/onechat';
+import { useAuth } from '@/data/auth';
 import { useStore } from '@/data/store';
 
 export default function InboxScreen() {
   const router = useRouter();
   const { orderedContacts, lastMessage, search } = useStore();
+  const { signOut } = useAuth();
   const [query, setQuery] = useState('');
 
   const hits = useMemo(() => search(query), [search, query]);
@@ -36,6 +38,9 @@ export default function InboxScreen() {
           <Text style={styles.title}>OneChat</Text>
           <Text style={styles.subtitle}>Unified inbox</Text>
         </View>
+        <Pressable style={styles.signOut} onPress={signOut} hitSlop={8}>
+          <Text style={styles.signOutText}>Sign out</Text>
+        </Pressable>
       </View>
 
       <View style={styles.searchBar}>
@@ -143,6 +148,15 @@ const styles = StyleSheet.create({
   logoMark: { color: '#fff', fontSize: 20, fontWeight: '800' },
   title: { fontSize: 22, fontWeight: '800', color: Brand.ink },
   subtitle: { fontSize: 13, color: Brand.ok, fontWeight: '600' },
+  signOut: {
+    marginLeft: 'auto',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: Brand.line,
+  },
+  signOutText: { fontSize: 13, color: Brand.inkSoft, fontWeight: '600' },
   searchBar: {
     flexDirection: 'row',
     alignItems: 'center',
