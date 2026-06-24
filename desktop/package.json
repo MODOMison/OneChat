@@ -1,0 +1,13 @@
+{
+  "name": "onechat-desktop",
+  "version": "0.1.0",
+  "private": true,
+  "description": "OneChat desktop widget shell — an always-on-top, left-anchored rail that expands into a drawer holding the OneChat app. Rebuilds the OneChatMini.ps1 prototype as a real, cross-platform-ready shell.",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron ."
+  },
+  "devDependencies": {
+    "electron": "^33.2.0"
+  }
+}

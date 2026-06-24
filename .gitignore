@@ -23,6 +23,7 @@ web-build/
 .DS_Store
 npm-debug.*
 expo-*.log
+electron.log
 
 # legacy prototype
 onechat-data.json

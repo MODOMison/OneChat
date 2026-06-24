@@ -1,0 +1,104 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>OneChat</title>
+  <style>
+    :root { --blue:#2563EB; --ink:#172033; --soft:#475467; --line:#E1E7F0; }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; height: 100%; background: transparent; overflow: hidden;
+      font-family: 'Segoe UI', system-ui, sans-serif; -webkit-user-select: none; }
+    #wrap { display: flex; height: 100%; gap: 8px; padding: 6px; }
+
+    /* The rail — always visible (the "collapsed" widget). Draggable. */
+    #rail {
+      width: 64px; flex: 0 0 64px; height: 100%;
+      background: #F7FBFF; border: 1px solid var(--line); border-radius: 22px;
+      box-shadow: 0 8px 28px rgba(20,40,80,.22);
+      display: flex; flex-direction: column; align-items: center;
+      padding: 12px 0; -webkit-app-region: drag;
+    }
+    .logo {
+      width: 42px; height: 42px; border-radius: 14px; position: relative;
+      background: linear-gradient(135deg, #2F6BFF, #18C7A7);
+      display: flex; align-items: center; justify-content: center;
+      color: #fff; font-weight: 900; font-size: 20px;
+    }
+    .logo .dot { position: absolute; top: 7px; right: 7px; width: 9px; height: 9px;
+      border-radius: 50%; background: #fff; }
+    .unread { margin-top: 12px; width: 38px; height: 34px; border-radius: 12px;
+      background: #F1F6FF; display: flex; align-items: center; justify-content: center;
+      color: var(--blue); font-weight: 900; font-size: 16px; }
+    .ministatus { margin-top: 8px; color: #12A784; font-size: 10px; font-weight: 700; text-align: center; }
+    .spacer { flex: 1; }
+    .btn { -webkit-app-region: no-drag; cursor: pointer; width: 48px; height: 28px;
+      margin: 4px 0; border: 0; border-radius: 14px; background: #EFF4FF;
+      color: var(--ink); font-size: 11px; font-weight: 700; }
+    .btn.primary { background: var(--blue); color: #fff; }
+    .btn.close { background: #FFF0F0; color: #D92D20; }
+
+    /* The drawer — shown only when expanded. Hosts the real OneChat app. */
+    #drawer { flex: 1; height: 100%; display: none; flex-direction: column;
+      background: #FBFDFF; border: 1px solid var(--line); border-radius: 22px;
+      overflow: hidden; box-shadow: 0 8px 28px rgba(20,40,80,.22); }
+    body.expanded #drawer { display: flex; }
+    #dhead { height: 30px; -webkit-app-region: drag; display: flex; align-items: center;
+      padding: 0 14px; color: var(--soft); font-size: 12px; font-weight: 600; }
+    webview { flex: 1; border: 0; background: #F5F8FC; }
+    #fallback { flex: 1; display: none; align-items: center; justify-content: center;
+      text-align: center; padding: 20px; color: var(--soft); font-size: 13px; line-height: 1.5; }
+  </style>
+</head>
+<body>
+  <div id="wrap">
+    <div id="rail">
+      <div class="logo">1<span class="dot"></span></div>
+      <div class="unread" id="unread">2</div>
+      <div class="ministatus">side hub</div>
+      <div class="spacer"></div>
+      <button class="btn primary" id="toggle">Open</button>
+      <button class="btn close" id="close">X</button>
+    </div>
+    <div id="drawer">
+      <div id="dhead">OneChat — unified inbox</div>
+      <webview id="app" src="about:blank"></webview>
+      <div id="fallback">
+        Start the OneChat app first:<br />
+        <code>cd client &amp;&amp; npx expo start --web</code><br />
+        then reopen the drawer.
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const appUrl = window.oneChatWidget.appUrl;
+    const toggle = document.getElementById('toggle');
+    const wv = document.getElementById('app');
+    const fallback = document.getElementById('fallback');
+    let expanded = false;
+    let loaded = false;
+
+    toggle.addEventListener('click', () => {
+      expanded = !expanded;
+      document.body.classList.toggle('expanded', expanded);
+      window.oneChatWidget.setExpanded(expanded);
+      toggle.textContent = expanded ? 'Hide' : 'Open';
+      if (expanded && !loaded) {
+        wv.src = appUrl;
+        loaded = true;
+      }
+    });
+
+    // If the app server isn't running, show a hint instead of a blank pane.
+    wv.addEventListener('did-fail-load', (e) => {
+      if (e.errorCode && e.errorCode !== -3) { // -3 = aborted, ignore
+        wv.style.display = 'none';
+        fallback.style.display = 'flex';
+      }
+    });
+
+    document.getElementById('close')
+      .addEventListener('click', () => window.oneChatWidget.close());
+  </script>
+</body>
+</html>

@@ -93,6 +93,31 @@ accounts/contacts/threads/messages/attachments. No Supabase client wired into th
 
 ---
 
+## Sprint 1.5 — Desktop widget shell (rail + drawer)  ✅ STARTED
+
+**Model:** default · **Depends on:** Phase 0 · **Branch:** `sprint-1b-desktop-widget`
+
+**Why:** OneChat's core identity (paper Fig 12) is a small floating widget that overlays your
+other apps — proven by the `OneChatPrototype/OneChatMini.ps1` rail. Floating over other apps only
+works on **desktop + Android** (iOS/web can't). Decision: **desktop first.** This sprint rebuilds
+the rail as a real, cross-platform-ready shell. **Unblocked** — needs no Supabase, so it's the
+right thing to build while the Supabase project is being set up.
+
+**Built:** `desktop/` Electron app — frameless, transparent, always-on-top, left-anchored window.
+Starts as a 76px **rail** (logo, unread, Open/X), expands to **rail + drawer** that embeds the
+real OneChat web app via `<webview>` pointed at the Expo dev server (`ONECHAT_URL`, default
+`http://localhost:8081`). `main.js` (window + anchor + expand/collapse IPC), `preload.js` (safe
+bridge), `shell.html` (rail/drawer UI). Run: start the app (`cd client && npx expo start --web`),
+then `cd desktop && npm start`.
+
+**Next on this shell (later):** anchor/auto-hide polish, collapse-to-dot, tray icon, click-through
+on the transparent margin, and package as an installer. The true always-on-top is done; it just
+needs the real hub (Sprints 2+) flowing inside it.
+
+**Exit:** an always-on-top OneChat rail floats over your other apps and opens the real app. ✅
+
+---
+
 ## Sprint 2 — Move the inbox onto Postgres (realtime)
 
 **Model:** default · **Depends on:** S1 · **Branch:** `sprint-2-inbox-on-postgres`
