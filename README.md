@@ -1,35 +1,66 @@
+<div align="center">
+
+<img src="brand/out/intro-final.png" width="280" alt="OneChat" />
+
 # OneChat
 
-OneChat is a lightweight Windows communication hub that anchors to the left side of the screen and stays always on top. It opens as a small side rail and expands into a compact drawer for messages, search, contacts, file links, undo, and text correction.
+**One place for all your messages — and an AI assistant that lives in them.**
 
-## Run
+A cross-platform communication **hub**: pool your real messaging accounts
+(Telegram → Gmail → SMS) into one unified inbox, reachable from a sleek
+always-on-top desktop **widget** that floats over your other apps.
 
-Open PowerShell and run:
+</div>
 
-```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -STA -File .\OneChatMini.ps1
+---
+
+## What it is
+
+OneChat is a multi-tenant SaaS communication hub. People juggle the same
+conversations across Telegram, Discord, Gmail, iMessage, and SMS — OneChat pools
+them into **one inbox, one search bar**, with usability signifiers (a big
+recipient "send-guard", consent-based smart-replace) drawn from an HCI study of
+instant-messaging apps.
+
+The flagship surface is a **desktop comm action bar**: a tiny ~3-icon launcher
+snapped to the screen edge that expands into a compact glass hub — and collapses
+back out of your way.
+
+### Highlights
+- 🪟 **Desktop widget** — frameless, always-on-top, Liquid-Glass overlay (`desktop/`, Electron)
+- 📥 **Unified inbox** — one list + one search across every platform (`client/`, Expo)
+- 🤖 **AI assistant** — summarize a thread / draft a reply, consent-based, latest Claude
+- 🔌 **Connectors** — Telegram (GramJS) → Gmail (OAuth) → SMS, your own accounts only
+- 🎬 **Brand motion** — Remotion logo intro + splash loader (`brand/`)
+
+## Repo layout
+
+| Path | What |
+|------|------|
+| `client/` | Expo (React Native) app — iOS / Android / web; the unified-inbox UI |
+| `desktop/` | Electron desktop widget — the always-on-top comm action bar |
+| `brand/` | Remotion brand videos (logo intro + splash loader) |
+| `supabase/` | Postgres schema + RLS (the hosted backend) |
+| `plans/` | Sprint-by-sprint build blueprint |
+
+## Run it
+
+```bash
+# the app (web)
+cd client && npx expo start --web        # http://localhost:8081
+
+# the desktop widget (loads the app)
+cd desktop && npm start                   # floats on your screen edge
+
+# the brand videos
+cd brand && npx remotion studio           # preview/edit
+cd brand && npx remotion render OneChatIntro out/onechat-intro.mp4
 ```
 
-## Current App
+## Status
 
-- `OneChatMini.ps1` is the current working app.
-- It saves local message/contact/file state to `onechat-data.json`.
-- It does not use a website or browser.
-- It is built with PowerShell and WPF, so it runs as a native Windows overlay.
+Phase 0 (UI shell) done. Auth + per-user data isolation, the desktop widget, the
+AI assistant, and the brand motion are in. Real message connectors and the live
+hosted backend are the next sprints — see [`plans/onechat-hub-and-ai-build.md`](plans/onechat-hub-and-ai-build.md).
 
-## Features
-
-- Left-side anchored always-on-top hub
-- Compact open/close drawer
-- Local contacts and threads
-- Local message sending
-- Search across contacts and thread previews
-- Add person
-- File link into a conversation
-- Undo last local sent message
-- Simple text fix for `omw` to `On my way`
-
-## Notes
-
-The current version is a local communication hub. Real integrations with iMessage, Discord, Gmail, Instagram, or WhatsApp require separate API/auth work and platform-specific permissions.
-
+> Authorized use only — connect your own accounts; no ToS-violating scrapers.
