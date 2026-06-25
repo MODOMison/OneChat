@@ -38,9 +38,18 @@ export default function InboxScreen() {
           <Text style={styles.title}>OneChat</Text>
           <Text style={styles.subtitle}>Unified inbox</Text>
         </View>
-        <Pressable style={styles.signOut} onPress={signOut} hitSlop={8}>
-          <Text style={styles.signOutText}>Sign out</Text>
-        </Pressable>
+        <View style={styles.headerActions}>
+          <Pressable
+            style={styles.appsBtn}
+            onPress={() => router.push('/connect')}
+            hitSlop={8}
+          >
+            <Text style={styles.appsBtnText}>＋ Apps</Text>
+          </Pressable>
+          <Pressable style={styles.signOut} onPress={signOut} hitSlop={8}>
+            <Text style={styles.signOutText}>Sign out</Text>
+          </Pressable>
+        </View>
       </View>
 
       <View style={styles.searchBar}>
@@ -148,8 +157,15 @@ const styles = StyleSheet.create({
   logoMark: { color: '#fff', fontSize: 20, fontWeight: '800' },
   title: { fontSize: 22, fontWeight: '800', color: Brand.ink },
   subtitle: { fontSize: 13, color: Brand.ok, fontWeight: '600' },
+  headerActions: { marginLeft: 'auto', flexDirection: 'row', alignItems: 'center', gap: 8 },
+  appsBtn: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
+    backgroundColor: Brand.blue,
+  },
+  appsBtnText: { fontSize: 13, color: '#fff', fontWeight: '700' },
   signOut: {
-    marginLeft: 'auto',
     paddingHorizontal: 10,
     paddingVertical: 6,
     borderRadius: 8,

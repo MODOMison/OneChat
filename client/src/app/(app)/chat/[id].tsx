@@ -1,6 +1,7 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useRef, useState } from 'react';
 import {
+  ActivityIndicator,
   Alert,
   FlatList,
   KeyboardAvoidingView,
@@ -18,6 +19,7 @@ import { PlatformBadge } from '@/components/PlatformBadge';
 import { Brand } from '@/constants/onechat';
 import { useStore } from '@/data/store';
 import type { Message } from '@/data/types';
+import { aiMode, draftReply, summarizeThread } from '@/lib/ai';
 import { suggestFix } from '@/lib/smartReplace';
 
 export default function ChatScreen() {
@@ -26,6 +28,8 @@ export default function ChatScreen() {
   const { getContact, threadMessages, send, attach, undoLast } = useStore();
   const listRef = useRef<FlatList<Message>>(null);
   const [draft, setDraft] = useState('');
+  const [aiBusy, setAiBusy] = useState<null | 'summary' | 'draft'>(null);
+  const [aiSummary, setAiSummary] = useState<string | null>(null);
 
   const contact = getContact(id);
   const messages = threadMessages(id);
@@ -96,6 +100,30 @@ export default function ChatScreen() {
     );
   };
 
+  // AI assistant — both actions are suggest-then-approve; the AI never sends.
+  const onSummarize = async () => {
+    setAiBusy('summary');
+    try {
+      setAiSummary(await summarizeThread(contact, messages));
+    } catch {
+      setAiSummary('Could not reach the AI assistant.');
+    } finally {
+      setAiBusy(null);
+    }
+  };
+
+  // Drafts a reply into the composer — you still review it and pass the send-guard.
+  const onDraftReply = async () => {
+    setAiBusy('draft');
+    try {
+      setDraft(await draftReply(contact, messages));
+    } catch {
+      Alert.alert('AI assistant', 'Could not draft a reply right now.');
+    } finally {
+      setAiBusy(null);
+    }
+  };
+
   return (
     <SafeAreaView style={styles.screen} edges={['top', 'left', 'right']}>
       {/* Big recipient header — the anti-wrong-person signifier */}
@@ -114,6 +142,42 @@ export default function ChatScreen() {
       <Text style={styles.guard}>
         You are messaging {contact.name} on {contact.platform}
       </Text>
+
+      {/* AI assistant — summarize the thread or draft a reply (you approve before send) */}
+      <View style={styles.aiRow}>
+        <Pressable
+          style={styles.aiBtn}
+          onPress={onSummarize}
+          disabled={aiBusy !== null}
+        >
+          {aiBusy === 'summary' ? (
+            <ActivityIndicator size="small" color={Brand.blue} />
+          ) : (
+            <Text style={styles.aiBtnText}>✨ Summarize</Text>
+          )}
+        </Pressable>
+        <Pressable
+          style={styles.aiBtn}
+          onPress={onDraftReply}
+          disabled={aiBusy !== null}
+        >
+          {aiBusy === 'draft' ? (
+            <ActivityIndicator size="small" color={Brand.blue} />
+          ) : (
+            <Text style={styles.aiBtnText}>✍️ Draft reply</Text>
+          )}
+        </Pressable>
+        {aiMode === 'demo' ? (
+          <Text style={styles.aiTag}>demo AI</Text>
+        ) : null}
+      </View>
+
+      {aiSummary ? (
+        <Pressable style={styles.aiSummary} onPress={() => setAiSummary(null)}>
+          <Text style={styles.aiSummaryLabel}>AI summary · tap to dismiss</Text>
+          <Text style={styles.aiSummaryText}>{aiSummary}</Text>
+        </Pressable>
+      ) : null}
 
       <KeyboardAvoidingView
         style={styles.flex}
@@ -199,6 +263,53 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     overflow: 'hidden',
   },
+  aiRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginHorizontal: 16,
+    marginBottom: 8,
+  },
+  aiBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: 32,
+    paddingHorizontal: 12,
+    borderRadius: 16,
+    backgroundColor: '#EEF4FF',
+    borderWidth: 1,
+    borderColor: '#D8E5FF',
+  },
+  aiBtnText: { color: Brand.blue, fontSize: 13, fontWeight: '700' },
+  aiTag: {
+    marginLeft: 'auto',
+    fontSize: 10,
+    fontWeight: '700',
+    color: Brand.inkFaint,
+    backgroundColor: Brand.bubbleThem,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 8,
+    overflow: 'hidden',
+  },
+  aiSummary: {
+    marginHorizontal: 16,
+    marginBottom: 8,
+    padding: 12,
+    borderRadius: 12,
+    backgroundColor: '#F5F8FF',
+    borderWidth: 1,
+    borderColor: '#D8E5FF',
+  },
+  aiSummaryLabel: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: Brand.blue,
+    marginBottom: 4,
+    textTransform: 'uppercase',
+  },
+  aiSummaryText: { fontSize: 14, color: Brand.ink, lineHeight: 20 },
   messages: { paddingHorizontal: 16, paddingVertical: 8, gap: 8 },
   bubbleRow: { flexDirection: 'row' },
   left: { justifyContent: 'flex-start' },
