@@ -41,7 +41,11 @@
       background: linear-gradient(135deg, var(--blue), var(--teal));
       box-shadow: 0 0 0 1px rgba(255,255,255,.14), 0 6px 18px rgba(47,107,255,.45);
       display: flex; align-items: center; justify-content: center;
-      color: #fff; font-weight: 800; font-size: 18px; }
+      color: #fff; font-weight: 800; font-size: 18px;
+      -webkit-app-region: no-drag; cursor: pointer;
+      transition: transform .18s ease, box-shadow .18s ease; }
+    .logo:hover { transform: scale(1.06); box-shadow: 0 0 0 1px rgba(255,255,255,.2), 0 8px 24px rgba(47,107,255,.6); }
+    .logo:active { transform: scale(.94); }
     .badge { position: absolute; top: -5px; right: -5px; min-width: 17px; height: 17px;
       padding: 0 4px; border-radius: 9px; background: var(--danger); color: #fff;
       font-size: 9.5px; font-weight: 800; display: flex; align-items: center;
@@ -162,7 +166,7 @@
     </div>
 
     <div id="rail">
-      <div class="logo">1<span class="badge" id="unread">2</span></div>
+      <div class="logo" id="logo" title="Open OneChat">1<span class="badge" id="unread">2</span></div>
       <button class="ico primary" id="toggle" title="Open">
         <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
       </button>
@@ -226,12 +230,14 @@
       $('msgs').scrollTop = $('msgs').scrollHeight;
     }
 
-    $('toggle').onclick = () => {
+    function toggleHub() {
       const expanded = !document.body.classList.contains('expanded');
       document.body.classList.toggle('expanded', expanded);
       W.setExpanded(expanded);
       if (expanded) renderThreads();
-    };
+    }
+    $('toggle').onclick = toggleHub;
+    $('logo').onclick = toggleHub; // the "1" is the primary opener
     $('close').onclick = () => W.close();
     $('back').onclick = () => document.body.classList.remove('inconvo');
     $('search').oninput = (e) => renderThreads(e.target.value);
