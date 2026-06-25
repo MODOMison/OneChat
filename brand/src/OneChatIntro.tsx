@@ -19,8 +19,15 @@ const EASE = Easing.bezier(0.16, 1, 0.3, 1);
 const Sparkles: React.FC = () => {
   const frame = useCurrentFrame();
   const pts = [
-    [150, 200], [930, 240], [840, 850], [210, 860],
-    [520, 130], [980, 540], [90, 480], [640, 960], [430, 980],
+    [150, 200],
+    [930, 240],
+    [840, 850],
+    [210, 860],
+    [520, 130],
+    [980, 540],
+    [90, 480],
+    [640, 960],
+    [430, 980],
   ];
   return (
     <>
@@ -50,7 +57,11 @@ const Sparkles: React.FC = () => {
 const Logo: React.FC = () => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
-  const s = spring({ frame, fps, config: { damping: 12, stiffness: 130, mass: 0.8 } });
+  const s = spring({
+    frame,
+    fps,
+    config: { damping: 12, stiffness: 130, mass: 0.8 },
+  });
   const scale = interpolate(s, [0, 1], [0.3, 1]);
   const rise = interpolate(s, [0, 1], [40, 0]);
   const glow = interpolate(Math.sin((frame / fps) * 3), [-1, 1], [26, 62]);
@@ -75,7 +86,11 @@ const Logo: React.FC = () => {
         overflow: "hidden",
       }}
     >
-      <span style={{ fontFamily, fontWeight: 800, fontSize: 168, color: "#fff" }}>1</span>
+      <span
+        style={{ fontFamily, fontWeight: 800, fontSize: 168, color: "#fff" }}
+      >
+        1
+      </span>
       <div
         style={{
           position: "absolute",
@@ -94,8 +109,14 @@ const Logo: React.FC = () => {
 
 const Wordmark: React.FC = () => {
   const frame = useCurrentFrame();
-  const opacity = interpolate(frame, [0, 20], [0, 1], { extrapolateRight: "clamp", easing: EASE });
-  const y = interpolate(frame, [0, 20], [28, 0], { extrapolateRight: "clamp", easing: EASE });
+  const opacity = interpolate(frame, [0, 20], [0, 1], {
+    extrapolateRight: "clamp",
+    easing: EASE,
+  });
+  const y = interpolate(frame, [0, 20], [28, 0], {
+    extrapolateRight: "clamp",
+    easing: EASE,
+  });
   return (
     <div
       style={{
@@ -115,8 +136,14 @@ const Wordmark: React.FC = () => {
 
 const Tagline: React.FC = () => {
   const frame = useCurrentFrame();
-  const opacity = interpolate(frame, [0, 20], [0, 1], { extrapolateRight: "clamp", easing: EASE });
-  const y = interpolate(frame, [0, 20], [16, 0], { extrapolateRight: "clamp", easing: EASE });
+  const opacity = interpolate(frame, [0, 20], [0, 1], {
+    extrapolateRight: "clamp",
+    easing: EASE,
+  });
+  const y = interpolate(frame, [0, 20], [16, 0], {
+    extrapolateRight: "clamp",
+    easing: EASE,
+  });
   return (
     <div
       style={{

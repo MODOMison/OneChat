@@ -20,7 +20,7 @@ export const OneChatSplash: React.FC = () => {
   const { fps, durationInFrames } = useVideoConfig();
 
   // Breathing pulse — period 1.5s (loop length should be a multiple of it).
-  const pulse = Math.sin((frame / fps) * (Math.PI * 2) / 1.5) * 0.5 + 0.5;
+  const pulse = Math.sin(((frame / fps) * (Math.PI * 2)) / 1.5) * 0.5 + 0.5;
   const scale = interpolate(pulse, [0, 1], [0.95, 1.05]);
   const glow = interpolate(pulse, [0, 1], [22, 60]);
 
@@ -95,7 +95,16 @@ export const OneChatSplash: React.FC = () => {
               justifyContent: "center",
             }}
           >
-            <span style={{ fontFamily, fontWeight: 800, fontSize: 112, color: "#fff" }}>1</span>
+            <span
+              style={{
+                fontFamily,
+                fontWeight: 800,
+                fontSize: 112,
+                color: "#fff",
+              }}
+            >
+              1
+            </span>
           </div>
         </div>
         <div
