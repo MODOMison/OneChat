@@ -86,11 +86,15 @@ const Logo: React.FC = () => {
         overflow: "hidden",
       }}
     >
-      <span
-        style={{ fontFamily, fontWeight: 800, fontSize: 168, color: "#fff" }}
-      >
-        1
-      </span>
+      <svg viewBox="0 0 24 24" style={{ width: 168, height: 168 }}>
+        <path
+          fill="#fff"
+          d="M12 3.2c-5 0-9 3.35-9 7.5 0 2.36 1.3 4.46 3.36 5.84-.18 1.02-.78 2.2-1.76 3.16 1.66-.2 3.22-.86 4.3-1.78.92.2 1.9.38 3.1.38 5 0 9-3.35 9-7.5S17 3.2 12 3.2z"
+        />
+        <circle cx="8.4" cy="10.7" r="1.5" fill="#2563EB" />
+        <circle cx="12" cy="10.7" r="1.5" fill="#2563EB" />
+        <circle cx="15.6" cy="10.7" r="1.5" fill="#2563EB" />
+      </svg>
       <div
         style={{
           position: "absolute",
