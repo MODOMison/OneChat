@@ -26,11 +26,11 @@
       color: var(--text); -webkit-user-select: none; user-select: none;
       -webkit-font-smoothing: antialiased; }
     svg { width: 17px; height: 17px; display: block; }
-    #wrap { display: flex; height: 100%; gap: 8px; padding: 7px; }
+    #wrap { display: flex; height: 100%; gap: 8px; padding: 7px; align-items: center; justify-content: flex-end; }
 
     /* ---------- RAIL (the collapsed 3-icon comm bar) ---------- */
     #rail {
-      width: 54px; flex: 0 0 54px; height: 100%;
+      width: 54px; flex: 0 0 54px; height: auto;
       background: var(--glass); border: 1px solid var(--hair); border-radius: 20px;
       box-shadow: var(--shadow); backdrop-filter: blur(22px) saturate(160%);
       -webkit-backdrop-filter: blur(22px) saturate(160%);
@@ -188,7 +188,7 @@
     // Gmail, SMS...). Empty until you connect an app. No simulated chats.
     const DATA = (window.oneChatWidget && window.oneChatWidget.liveData) || [];
 
-    const W = window.oneChatWidget || { setExpanded(){}, close(){} };
+    const W = window.oneChatWidget || { setIgnore(){}, close(){} };
     const $ = (id) => document.getElementById(id);
     let current = null;
 
@@ -237,9 +237,15 @@
     function toggleHub() {
       const expanded = !document.body.classList.contains('expanded');
       document.body.classList.toggle('expanded', expanded);
-      W.setExpanded(expanded);
       if (expanded) renderThreads();
     }
+
+    // Click-through: the window is fixed-size and mostly transparent, so let
+    // clicks pass to the desktop UNLESS the cursor is over the rail/drawer.
+    window.addEventListener('mousemove', (e) => {
+      const el = document.elementFromPoint(e.clientX, e.clientY);
+      W.setIgnore(!(el && el.closest('#rail, #drawer')));
+    });
     $('toggle').onclick = toggleHub;
     $('logo').onclick = toggleHub; // the "1" is the primary opener
     $('close').onclick = () => W.close();

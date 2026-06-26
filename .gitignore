@@ -24,6 +24,9 @@ web-build/
 npm-debug.*
 expo-*.log
 electron.log
+# dev screenshot artifacts (capture.mjs output)
+desktop/cap*.png
+desktop/rec/
 
 # legacy prototype
 onechat-data.json

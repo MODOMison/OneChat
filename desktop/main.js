@@ -1,34 +1,31 @@
 // OneChat desktop widget — Electron main process.
 //
-// A frameless, transparent, always-on-top overlay SNAPPED to the right edge of
-// the screen. Collapsed it's a tiny ~3-icon launcher; tap to expand it into a
-// compact drawer (the lightweight hub) that grows leftward from the right edge.
-// Never a blocking window — a sleek overlay, like the OneChatMini prototype.
+// A frameless, transparent, always-on-top overlay snapped to the RIGHT edge.
+// The window is a FIXED size (transparent Windows windows can't be resized via
+// setBounds). Expand/collapse is pure CSS in the renderer; the empty transparent
+// area is click-through (setIgnoreMouseEvents) so it never blocks your desktop.
 
 const { app, BrowserWindow, ipcMain, screen } = require('electron');
 const path = require('path');
 
-// Collapsed = a small ~3-icon launcher; expanded = rail + compact drawer.
-const RAIL_W = 56;
-const RAIL_H = 134;  // ~3 icons tall — a compact comm action bar
-const PANEL_W = 348;
-const PANEL_H = 460;
+const WIDTH = 360;
+const HEIGHT = 480;
 
 let win;
 
-// Snap the window to the RIGHT edge of the screen, vertically centered.
-function anchorRight(width, height) {
+function anchorRight() {
   if (!win) return;
   const { workArea } = screen.getPrimaryDisplay();
-  const x = workArea.x + workArea.width - width - 12;
-  const y = Math.round(workArea.y + (workArea.height - height) / 2);
-  win.setBounds({ x, y, width, height });
+  win.setPosition(
+    workArea.x + workArea.width - WIDTH - 8,
+    Math.round(workArea.y + (workArea.height - HEIGHT) / 2),
+  );
 }
 
 function createWindow() {
   win = new BrowserWindow({
-    width: RAIL_W,
-    height: RAIL_H,
+    width: WIDTH,
+    height: HEIGHT,
     frame: false,
     transparent: true,
     alwaysOnTop: true,
@@ -40,21 +37,20 @@ function createWindow() {
       contextIsolation: true,
       nodeIntegration: false,
     },
-    focusable: true,
-    // Don't steal focus when it pops up — it's an overlay, not the main window.
-    acceptFirstMouse: true,
   });
 
-  // Stay above full-screen apps too.
   win.setAlwaysOnTop(true, 'screen-saver');
   win.loadFile(path.join(__dirname, 'shell.html'));
-  anchorRight(RAIL_W, RAIL_H);
+  anchorRight();
+
+  // Start fully click-through; the renderer disables this while the cursor is
+  // over the rail/drawer (forward:true keeps mousemove flowing so it can tell).
+  win.setIgnoreMouseEvents(true, { forward: true });
 }
 
-// Renderer asks to expand/collapse; resize + keep snapped to the right edge.
-ipcMain.on('set-expanded', (_event, expanded) => {
-  if (expanded) anchorRight(PANEL_W, PANEL_H);
-  else anchorRight(RAIL_W, RAIL_H);
+// Renderer toggles click-through based on what the cursor is over.
+ipcMain.on('set-ignore', (_event, ignore) => {
+  if (win) win.setIgnoreMouseEvents(!!ignore, { forward: true });
 });
 
 ipcMain.on('close-widget', () => app.quit());

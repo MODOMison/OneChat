@@ -24,7 +24,8 @@ function loadLive() {
 }
 
 contextBridge.exposeInMainWorld('oneChatWidget', {
-  setExpanded: (value) => ipcRenderer.send('set-expanded', !!value),
+  // Toggle window click-through (true = clicks pass to the desktop behind).
+  setIgnore: (ignore) => ipcRenderer.send('set-ignore', !!ignore),
   close: () => ipcRenderer.send('close-widget'),
   // Real synced threads (empty until a connector has run).
   liveData: loadLive(),
