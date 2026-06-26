@@ -80,6 +80,9 @@
     .search input::placeholder { color: var(--faint); }
 
     .scroll { flex: 1; overflow-y: auto; padding: 2px 7px 8px; }
+    .empty { color: var(--soft); font-size: 12px; line-height: 1.7; text-align: center; padding: 28px 14px; }
+    .empty code { display: inline-block; margin-top: 6px; padding: 4px 8px; border-radius: 7px;
+      background: var(--glass-3); border: 1px solid var(--hair); color: var(--text); font-size: 10.5px; }
     .scroll::-webkit-scrollbar { width: 6px; }
     .scroll::-webkit-scrollbar-thumb { background: var(--hair); border-radius: 3px; }
     .thread { display: flex; align-items: center; gap: 9px; padding: 8px; border-radius: 13px;
@@ -178,18 +181,9 @@
 
   <script>
     const PLAT = { Telegram:'#229ED9', Discord:'#5865F2', Gmail:'#EA4335', iMessage:'#34C759', Instagram:'#C13584', SMS:'#2F6BFF' };
-    const DATA = [
-      { id:'elana', name:'Elana Aftahi', app:'Telegram', initials:'EA',
-        msgs:[{s:'them',t:'omw to the studio, save me a seat!'},{s:'me',t:'Got you a spot by the window.'}] },
-      { id:'studio', name:'Studio Group', app:'Discord', initials:'SG',
-        msgs:[{s:'them',t:'Upload the Project 3 deck here.'}] },
-      { id:'amelia', name:'Amelia Yum', app:'iMessage', initials:'AY',
-        msgs:[{s:'them',t:'Can you check the floating hub sketch?'},{s:'me',t:'Yes — recipient area is bigger now.'}] },
-      { id:'prof', name:'Professor Lee', app:'Gmail', initials:'PL',
-        msgs:[{s:'them',t:'I left feedback on your analysis.'}] },
-      { id:'mom', name:'Mom', app:'SMS', initials:'M',
-        msgs:[{s:'them',t:'Call me when you are free.'}] },
-    ];
+    // REAL data only — populated by the connectors (Telegram first, then
+    // Gmail, SMS...). Empty until you connect an app. No simulated chats.
+    const DATA = (window.oneChatWidget && window.oneChatWidget.liveData) || [];
 
     const W = window.oneChatWidget || { setExpanded(){}, close(){} };
     const $ = (id) => document.getElementById(id);
@@ -198,6 +192,13 @@
     function renderThreads(filter='') {
       const q = filter.trim().toLowerCase();
       $('threads').innerHTML = '';
+      if (DATA.length === 0) {
+        $('threads').innerHTML =
+          '<div class="empty"><b>No connected apps yet</b><br>' +
+          'Connect Telegram to see your real chats:<br>' +
+          '<code>cd connectors/telegram &amp;&amp; npm run login</code></div>';
+        return;
+      }
       DATA.filter(c => !q || (c.name+' '+c.app+' '+c.msgs.at(-1).t).toLowerCase().includes(q))
         .forEach(c => {
           const row = document.createElement('div');

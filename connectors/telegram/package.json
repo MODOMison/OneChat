@@ -1,0 +1,16 @@
+{
+  "name": "onechat-telegram-connector",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Real Telegram connector for OneChat (GramJS). Logs into the user's own Telegram account, syncs DMs/chats, and normalizes them into OneChat's shape.",
+  "scripts": {
+    "login": "node login.mjs",
+    "sync": "node sync.mjs"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "input": "^1.0.1",
+    "telegram": "^2.26.22"
+  }
+}
