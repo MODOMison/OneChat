@@ -1,38 +1,41 @@
-// Dev-only: drive the expand flow + screenshot from Electron (no browser).
-import { app, BrowserWindow, ipcMain } from "electron";
+// Dev-only: verify the two-window open flow + screenshot (no browser).
+import { app, BrowserWindow, ipcMain, screen } from "electron";
 import { writeFileSync } from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-ipcMain.on("set-ignore", () => {});
+const RAIL_W = 64, RAIL_H = 156, DRAW_W = 320, DRAW_H = 448;
+let rail, drawer;
+
+function place() {
+  const { workArea } = screen.getPrimaryDisplay();
+  const rx = workArea.x + workArea.width - RAIL_W - 8;
+  rail.setBounds({ x: rx, y: Math.round(workArea.y + (workArea.height - RAIL_H) / 2), width: RAIL_W, height: RAIL_H });
+  drawer.setBounds({ x: rx - DRAW_W - 2, y: Math.round(workArea.y + (workArea.height - DRAW_H) / 2), width: DRAW_W, height: DRAW_H });
+}
+function makeWin(w, h, file, show) {
+  const win = new BrowserWindow({
+    width: w, height: h, frame: false, resizable: false, show,
+    backgroundColor: "#0b0e16",
+    webPreferences: { preload: path.join(__dirname, "preload.js"), contextIsolation: true, sandbox: false },
+  });
+  win.loadFile(path.join(__dirname, file));
+  return win;
+}
+ipcMain.on("toggle-drawer", () => { if (drawer.isVisible()) drawer.hide(); else { place(); drawer.showInactive(); } });
+ipcMain.on("hide-drawer", () => drawer.hide());
+ipcMain.on("close-app", () => {});
 
 app.whenReady().then(async () => {
-  const win = new BrowserWindow({
-    width: 360,
-    height: 480,
-    show: false,
-    backgroundColor: "#0b0e16",
-    webPreferences: {
-      preload: path.join(__dirname, "preload.js"),
-      contextIsolation: true,
-    },
-  });
-  await win.loadFile(path.join(__dirname, "shell.html"));
-  await new Promise((r) => setTimeout(r, 400));
-  await win.webContents.executeJavaScript("document.getElementById('toggle').click();");
-  await new Promise((r) => setTimeout(r, 800));
-
-  const diag = await win.webContents.executeJavaScript(`JSON.stringify({
-    cls: document.body.className,
-    searchW: Math.round(document.querySelector('.search').getBoundingClientRect().width),
-    railH: Math.round(document.getElementById('rail').getBoundingClientRect().height),
-    winW: window.innerWidth
-  })`);
-  console.log("DIAG " + diag);
-  writeFileSync(
-    path.join(__dirname, "cap-expanded.png"),
-    (await win.webContents.capturePage()).toPNG(),
-  );
+  rail = makeWin(RAIL_W, RAIL_H, "rail.html", true);
+  drawer = makeWin(DRAW_W, DRAW_H, "drawer.html", false);
+  place();
+  await new Promise((r) => setTimeout(r, 500));
+  await rail.webContents.executeJavaScript("document.getElementById('logo').click();");
+  await new Promise((r) => setTimeout(r, 500));
+  console.log("DRAWER_VISIBLE " + drawer.isVisible());
+  writeFileSync(path.join(__dirname, "cap-rail.png"), (await rail.webContents.capturePage()).toPNG());
+  writeFileSync(path.join(__dirname, "cap-drawer.png"), (await drawer.webContents.capturePage()).toPNG());
   app.quit();
 });

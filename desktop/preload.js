@@ -1,10 +1,9 @@
-// Safe bridge between the rail UI (renderer) and the window controls (main).
+// Safe bridge between the windows (renderer) and the main process.
 const { contextBridge, ipcRenderer } = require('electron');
 const fs = require('fs');
 const path = require('path');
 
 // Load REAL synced messages if a connector has produced them.
-// (Telegram connector writes connectors/telegram/onechat-live.json.)
 function loadLive() {
   const sources = [
     path.join(__dirname, '..', 'connectors', 'telegram', 'onechat-live.json'),
@@ -17,16 +16,15 @@ function loadLive() {
         if (Array.isArray(data)) all = all.concat(data);
       }
     } catch {
-      // ignore a malformed/partial file
+      // ignore malformed file
     }
   }
   return all;
 }
 
 contextBridge.exposeInMainWorld('oneChatWidget', {
-  // Toggle window click-through (true = clicks pass to the desktop behind).
-  setIgnore: (ignore) => ipcRenderer.send('set-ignore', !!ignore),
-  close: () => ipcRenderer.send('close-widget'),
-  // Real synced threads (empty until a connector has run).
+  toggleDrawer: () => ipcRenderer.send('toggle-drawer'),
+  hideDrawer: () => ipcRenderer.send('hide-drawer'),
+  close: () => ipcRenderer.send('close-app'),
   liveData: loadLive(),
 });

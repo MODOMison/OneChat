@@ -1,62 +1,63 @@
 // OneChat desktop widget — Electron main process.
 //
-// A frameless, transparent, always-on-top overlay snapped to the RIGHT edge.
-// The window is a FIXED size (transparent Windows windows can't be resized via
-// setBounds). Expand/collapse is pure CSS in the renderer; the empty transparent
-// area is click-through (setIgnoreMouseEvents) so it never blocks your desktop.
+// Two fixed-size, frameless, always-on-top windows snapped to the RIGHT edge:
+//   • rail   — small, always visible (logo / open / close)
+//   • drawer — the hub; shown/hidden next to the rail on demand
+// No window resizing (transparent Windows windows can't be resized) and no
+// click-through tricks — each window is exactly its content, so clicks always
+// land and the desktop behind stays free.
 
 const { app, BrowserWindow, ipcMain, screen } = require('electron');
 const path = require('path');
 
-const WIDTH = 360;
-const HEIGHT = 480;
+const RAIL_W = 64, RAIL_H = 156;
+const DRAW_W = 320, DRAW_H = 448;
 
-let win;
+let rail, drawer;
 
-function anchorRight() {
-  if (!win) return;
+function place() {
   const { workArea } = screen.getPrimaryDisplay();
-  win.setPosition(
-    workArea.x + workArea.width - WIDTH - 8,
-    Math.round(workArea.y + (workArea.height - HEIGHT) / 2),
-  );
+  const rx = workArea.x + workArea.width - RAIL_W - 8;
+  const ry = Math.round(workArea.y + (workArea.height - RAIL_H) / 2);
+  rail.setBounds({ x: rx, y: ry, width: RAIL_W, height: RAIL_H });
+  if (drawer) {
+    const dy = Math.round(workArea.y + (workArea.height - DRAW_H) / 2);
+    drawer.setBounds({ x: rx - DRAW_W - 2, y: dy, width: DRAW_W, height: DRAW_H });
+  }
 }
 
-function createWindow() {
-  win = new BrowserWindow({
-    width: WIDTH,
-    height: HEIGHT,
-    frame: false,
-    transparent: true,
-    alwaysOnTop: true,
-    skipTaskbar: true,
-    resizable: false,
-    hasShadow: false,
+function makeWin(w, h, file, show) {
+  const win = new BrowserWindow({
+    width: w, height: h, frame: false, transparent: true, alwaysOnTop: true,
+    skipTaskbar: true, resizable: false, hasShadow: false, show,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
       nodeIntegration: false,
+      // Preload reads the live-messages file (fs) — sandboxed preloads can't
+      // require Node modules, which silently broke the whole bridge before.
+      sandbox: false,
     },
   });
-
   win.setAlwaysOnTop(true, 'screen-saver');
-  win.loadFile(path.join(__dirname, 'shell.html'));
-  anchorRight();
-
-  // Start fully click-through; the renderer disables this while the cursor is
-  // over the rail/drawer (forward:true keeps mousemove flowing so it can tell).
-  win.setIgnoreMouseEvents(true, { forward: true });
+  win.loadFile(path.join(__dirname, file));
+  return win;
 }
 
-// Renderer toggles click-through based on what the cursor is over.
-ipcMain.on('set-ignore', (_event, ignore) => {
-  if (win) win.setIgnoreMouseEvents(!!ignore, { forward: true });
-});
+function createWindows() {
+  rail = makeWin(RAIL_W, RAIL_H, 'rail.html', true);
+  drawer = makeWin(DRAW_W, DRAW_H, 'drawer.html', false);
+  place();
+}
 
-ipcMain.on('close-widget', () => app.quit());
-
-app.whenReady().then(createWindow);
-app.on('activate', () => {
-  if (BrowserWindow.getAllWindows().length === 0) createWindow();
+ipcMain.on('toggle-drawer', () => {
+  if (!drawer) return;
+  if (drawer.isVisible()) drawer.hide();
+  else { place(); drawer.showInactive(); }
 });
+ipcMain.on('hide-drawer', () => drawer && drawer.hide());
+ipcMain.on('close-app', () => app.quit());
+
+app.whenReady().then(createWindows);
+app.on('activate', () => { if (!rail) createWindows(); });
 app.on('window-all-closed', () => app.quit());
