@@ -9,6 +9,7 @@
 
 const { app, BrowserWindow, ipcMain, screen } = require('electron');
 const path = require('path');
+const { spawn } = require('child_process');
 
 const RAIL_W = 72, RAIL_H = 200;
 const DRAW_W = 320, DRAW_H = 448;
@@ -57,6 +58,26 @@ ipcMain.on('toggle-drawer', () => {
 });
 ipcMain.on('hide-drawer', () => drawer && drawer.hide());
 ipcMain.on('close-app', () => app.quit());
+
+// Real send: route to the connector that owns the thread (tg- / gm- prefix) and
+// run its send.mjs. We reuse Electron's bundled Node via ELECTRON_RUN_AS_NODE so
+// there's no separate Node install dependency. Returns { ok, error } to the UI.
+ipcMain.handle('send-message', async (_e, { id, text }) => {
+  const dir = String(id).startsWith('gm-') ? 'gmail' : 'telegram';
+  const cwd = path.join(__dirname, '..', 'connectors', dir);
+  return await new Promise((resolve) => {
+    const child = spawn(process.execPath, ['send.mjs', id, text], {
+      cwd,
+      env: { ...process.env, ELECTRON_RUN_AS_NODE: '1' },
+    });
+    let err = '';
+    child.stderr.on('data', (d) => (err += d));
+    child.on('error', (e) => resolve({ ok: false, error: e.message }));
+    child.on('close', (code) =>
+      resolve({ ok: code === 0, error: err.trim() || `exit ${code}` }),
+    );
+  });
+});
 
 app.whenReady().then(createWindows);
 app.on('activate', () => { if (!rail) createWindows(); });

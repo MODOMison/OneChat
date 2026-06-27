@@ -21,7 +21,7 @@
 | Platform | Approach | Auth | 2-way | Effort | Status |
 |----------|----------|------|:-----:|:------:|:------:|
 | **Telegram** | MTProto client API via **GramJS** (user account, not bot) | Phone login → encrypted session string | ✅ | `M` | 🟢 *started — `connectors/telegram/`* |
-| **Email (Gmail)** | **Gmail API** (OAuth) — threads, send | Google OAuth | ✅ | `M` | 🟢 |
+| **Email (Gmail)** | **Gmail API** (OAuth) — threads, send | Google OAuth | ✅ | `M` | 🟢 *started — `connectors/gmail/`* |
 | **Email (generic)** | **IMAP/SMTP** — any provider | App password / OAuth | ✅ | `M` | 🟡 |
 | **SMS (Android)** | Native module, dev build, `READ_SMS`/`RECEIVE_SMS`/default-SMS-app | OS permission grant | ✅ | `L` | 🟡 *Android only* |
 

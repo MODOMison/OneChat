@@ -1,0 +1,16 @@
+{
+  "name": "onechat-gmail-connector",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Real Gmail connector for OneChat. Signs into the user's own Google account via OAuth, syncs recent email threads, and normalizes them into OneChat's shape.",
+  "scripts": {
+    "login": "node login.mjs",
+    "sync": "node sync.mjs",
+    "send": "node send.mjs"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "googleapis": "^144.0.0"
+  }
+}

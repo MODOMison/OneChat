@@ -7,6 +7,7 @@ const path = require('path');
 function loadLive() {
   const sources = [
     path.join(__dirname, '..', 'connectors', 'telegram', 'onechat-live.json'),
+    path.join(__dirname, '..', 'connectors', 'gmail', 'onechat-live.json'),
   ];
   let all = [];
   for (const p of sources) {
@@ -26,5 +27,7 @@ contextBridge.exposeInMainWorld('oneChatWidget', {
   toggleDrawer: () => ipcRenderer.send('toggle-drawer'),
   hideDrawer: () => ipcRenderer.send('hide-drawer'),
   close: () => ipcRenderer.send('close-app'),
+  // Returns { ok, error }. Fires the owning connector's send.mjs in the main process.
+  sendMessage: (payload) => ipcRenderer.invoke('send-message', payload),
   liveData: loadLive(),
 });

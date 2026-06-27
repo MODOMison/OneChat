@@ -1,0 +1,6 @@
+# Secrets + your account token — NEVER commit these.
+.env
+token.json
+# Synced real messages (your private data).
+onechat-live.json
+node_modules/
