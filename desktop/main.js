@@ -10,7 +10,7 @@
 const { app, BrowserWindow, ipcMain, screen } = require('electron');
 const path = require('path');
 
-const RAIL_W = 64, RAIL_H = 156;
+const RAIL_W = 72, RAIL_H = 200;
 const DRAW_W = 320, DRAW_H = 448;
 
 let rail, drawer;

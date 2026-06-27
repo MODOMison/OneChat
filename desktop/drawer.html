@@ -57,11 +57,33 @@
       border-radius: 9px; background: var(--glass3); color: var(--soft); display: flex; align-items: center; justify-content: center; }
     .iconbtn:hover { background: var(--hair); color: var(--text); }
     .iconbtn svg { width: 17px; height: 17px; }
-    .cname { font-weight: 700; font-size: 14px; }
-    .guard { margin: 0 11px 7px; padding: 5px 9px; display: flex; align-items: center; gap: 6px;
-      background: rgba(244,63,94,.12); color: #ffa7b2; font-size: 10px; font-weight: 600;
-      border-radius: 9px; border: 1px solid rgba(244,63,94,.2); }
-    .guard .dotr { width: 6px; height: 6px; border-radius: 50%; background: var(--danger); flex: 0 0 6px; }
+    /* Recipient identity — kept visually dominant so the user always knows who
+       they're about to message (study's #1 error: 14/16 sent to wrong person).
+       Photo is larger than the name: face/colour recognition is pre-attentive. */
+    .cav { width: 38px; height: 38px; border-radius: 12px; flex: 0 0 38px; display: flex;
+      align-items: center; justify-content: center; color: #fff; font-weight: 800; font-size: 13px;
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,.14); }
+    .cname { font-weight: 700; font-size: 15px; }
+
+    /* Send-guard toast — NEVER blocks the send. Appears only at a risk moment
+       (first send to a recipient, or switching recipients) to confirm WHO it went
+       to, with a quick Undo. Send-then-verify, not gate-before-send: catches the
+       study's #1 wrong-recipient error without adding a hurdle to normal replies. */
+    #sent { position: absolute; left: 9px; right: 9px; bottom: 52px; padding: 7px 9px; gap: 8px;
+      align-items: center; background: var(--glass2); border: 1px solid var(--hair);
+      border-radius: 12px; box-shadow: 0 6px 18px rgba(0,0,0,.4); opacity: 0;
+      transform: translateY(6px); transition: opacity .18s ease, transform .18s ease;
+      display: flex; pointer-events: none; }
+    body.sent-toast #sent { opacity: 1; transform: translateY(0); pointer-events: auto; }
+    .sfav { width: 24px; height: 24px; border-radius: 8px; flex: 0 0 24px; display: flex;
+      align-items: center; justify-content: center; color:#fff; font-weight: 800; font-size: 10px; }
+    .sftext { flex: 1; min-width: 0; font-size: 11.5px; color: var(--soft);
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .sftext b { color: var(--text); }
+    .sfundo { -webkit-app-region: no-drag; cursor: pointer; height: 24px; border: 0; border-radius: 8px;
+      padding: 0 10px; font-family: inherit; font-size: 11px; font-weight: 700;
+      background: var(--glass3); color: #ffb3bc; }
+    .sfundo:hover { background: rgba(244,63,94,.18); color: #fff; }
     .msgs { flex: 1; overflow-y: auto; padding: 4px 11px; display: flex; flex-direction: column; gap: 6px; }
     .bub { max-width: 80%; padding: 7px 10px; border-radius: 13px; font-size: 12px; line-height: 1.35; }
     .bub.them { background: var(--glass2); align-self: flex-start; border-bottom-left-radius: 4px; border: 1px solid var(--hair); }
@@ -98,13 +120,18 @@
         <button class="iconbtn" id="back" title="Back">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
         </button>
+        <div class="cav" id="cav"></div>
         <div>
           <div class="cname" id="cname"></div>
           <div class="tplat" id="cplat" style="display:inline-block; margin-top:3px"></div>
         </div>
       </div>
-      <div class="guard"><span class="dotr"></span><span id="guard"></span></div>
       <div class="msgs" id="msgs"></div>
+      <div id="sent">
+        <div class="sfav" id="sfav"></div>
+        <div class="sftext">Sent to <b id="sfname"></b> on <span id="sfapp"></span></div>
+        <button class="sfundo" id="sfUndo">Undo</button>
+      </div>
       <div class="composer">
         <input id="reply" placeholder="Message" />
         <button class="send" id="sendBtn" title="Send">
@@ -120,6 +147,9 @@
     const W = window.oneChatWidget || { hideDrawer(){} };
     const $ = (id) => document.getElementById(id);
     let current = null;
+    // Who we last sent to this session — used to fire the send-guard confirm only
+    // when the recipient is new or has changed, not on every message.
+    let lastSentTo = null;
 
     function renderThreads(filter='') {
       const q = filter.trim().toLowerCase();
@@ -146,11 +176,54 @@
     }
     function openConvo(id) {
       current = DATA.find(c => c.id === id);
+      const color = PLAT[current.app] || '#6B7890';
       $('cname').textContent = current.name;
       $('cplat').textContent = current.app;
-      $('guard').textContent = `Sending via ${current.app} — check recipient`;
+      $('cav').textContent = current.initials;
+      $('cav').style.background = color;
+      hideToast();
       drawMsgs();
       document.body.classList.add('inconvo');
+    }
+
+    let toastTimer = null, lastSent = null;
+    function hideToast() {
+      clearTimeout(toastTimer);
+      document.body.classList.remove('sent-toast');
+    }
+    // Send always goes through immediately — no hurdle. On a recipient SWITCH we
+    // surface a quick, non-blocking "Sent to X" toast with Undo so a wrong send is
+    // caught after the fact rather than gated before it.
+    function send() {
+      const v = $('reply').value.trim();
+      if (!v || !current) return;
+      const msg = { s:'me', t:v };
+      current.msgs.push(msg);
+      $('reply').value = '';
+      drawMsgs();
+
+      const switched = current.id !== lastSentTo;
+      lastSent = { convo: current, msg };
+      lastSentTo = current.id;
+      if (switched) {
+        $('sfname').textContent = current.name;
+        $('sfapp').textContent = current.app;
+        $('sfav').textContent = current.initials;
+        $('sfav').style.background = PLAT[current.app] || '#6B7890';
+        document.body.classList.add('sent-toast');
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(hideToast, 4000);
+      }
+    }
+    function undoLast() {
+      if (lastSent) {
+        const i = lastSent.convo.msgs.indexOf(lastSent.msg);
+        if (i !== -1) lastSent.convo.msgs.splice(i, 1);
+        if (lastSent.convo === current) drawMsgs();
+        lastSentTo = null; // re-arm the guard for the next send
+        lastSent = null;
+      }
+      hideToast();
     }
     function drawMsgs() {
       $('msgs').innerHTML = '';
@@ -166,12 +239,9 @@
     $('closeDrawer').onclick = () => W.hideDrawer();
     $('back').onclick = () => document.body.classList.remove('inconvo');
     $('search').oninput = (e) => renderThreads(e.target.value);
-    $('sendBtn').onclick = () => {
-      const v = $('reply').value.trim();
-      if (!v || !current) return;
-      current.msgs.push({ s:'me', t:v }); $('reply').value = ''; drawMsgs();
-    };
-    $('reply').addEventListener('keydown', (e) => { if (e.key === 'Enter') $('sendBtn').click(); });
+    $('sendBtn').onclick = () => send();
+    $('sfUndo').onclick = () => undoLast();
+    $('reply').addEventListener('keydown', (e) => { if (e.key === 'Enter') send(); });
 
     renderThreads();
   </script>
