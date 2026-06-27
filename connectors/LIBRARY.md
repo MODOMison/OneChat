@@ -74,3 +74,31 @@ Telegram (MTProto) and Signal (`signal-cli`) want a **persistent process** to ho
 the session — so the connector layer likely needs a small always-on Node worker
 rather than only Supabase Edge Functions (this is the open question flagged in
 `PLAN.md §5`). Tokens/sessions encrypted at rest; never log message bodies.
+
+---
+
+## Multi-tenant auth model (mass users)
+
+**The critical distinction: one *app* credential per platform (owned by OneChat),
+plus one *account* credential per user (owned by the user).** Mass users never
+register their own developer keys — they just authorize their own account in-app.
+
+| Platform | App-level credential (OneChat owns, **server-side, 1 total**) | Per-user credential (created at login) | What the user does |
+|----------|---------------------------------------------------------------|----------------------------------------|--------------------|
+| **Telegram** | `api_id` / `api_hash` (identifies the *app* to Telegram) | **Session string** (the real per-user secret) | Enter phone → SMS code → 2FA, in-app |
+| **Gmail** | OAuth client ID/secret | OAuth access/refresh token | "Sign in with Google" |
+| **Slack** | App OAuth credentials | Per-workspace token | "Add to Slack" |
+| **SMS (Android)** | — | OS permission grant | Approve the permission prompt |
+
+**Rules:**
+- App credentials live **only** in the server/Edge Function — **never shipped to the client**.
+- Per-user secrets (Telegram session, OAuth tokens) are stored **encrypted at rest** in
+  Supabase under RLS, scoped to that user — never in a local file (the connector CLI's
+  local `session.txt` / `onechat-live.json` are **dev prototype only**).
+- The terminal login flow (`login.mjs`) becomes an **in-app** phone→code→2FA screen in production.
+- ⚠️ A single Telegram `api_id` serving many accounts can be rate-limited or flagged —
+  a real launch needs per-user rate limits and possibly registering the `api_id` with Telegram.
+
+**For local dev/testing:** use your own `api_id`/`api_hash` in `connectors/telegram/.env`
+to prove the connector end-to-end. That same pair becomes the app-level server credential
+at launch; users then just log in with their phone.
