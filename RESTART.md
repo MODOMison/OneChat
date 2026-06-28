@@ -20,10 +20,20 @@ Telegram chats appear automatically (reads `connectors/telegram/onechat-live.jso
 cd connectors/telegram && npm run sync
 ```
 
-## Turn on Gmail (first time — ~3 steps)
-1. `connectors/gmail/.env` ← your Google OAuth client (see `.env.example`; "Desktop app" type).
-2. `cd connectors/gmail && npm install && npm run login`  (browser → approve).
-3. `npm run sync`  → real email shows in the widget next to Telegram.
+## Turn on Gmail — IN PROGRESS (resume here)
+- ✅ OAuth Desktop-app client created (project `onechat-500800`); creds written to
+  `connectors/gmail/.env`.
+- ✅ `cd connectors/gmail && npm install` done.
+- ⏳ **PENDING: browser approval.** `npm run login` was started but the consent
+  screen was never approved (no `token.json` yet). To finish:
+  1. `cd connectors/gmail && npm run login`  → open the printed URL.
+  2. Pick the Test-user account → "Advanced → Go to OneChat (unsafe)" → approve
+     read + send. Saves `token.json`.
+  3. `npm run sync`  → real email shows in the widget next to Telegram.
+
+## Next channel after Gmail
+**Matrix** — cheapest *correct* 3rd channel (open protocol, no ToS risk). See
+`connectors/LIBRARY.md` (recommended order: Telegram → Gmail → Matrix → SMS).
 
 ## Test SENDING safely first
 Don't test against a real contact. Use a safe target:
